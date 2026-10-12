@@ -77,7 +77,7 @@ Watcher polls source -> new text found?
 ## Quickstart
 
 ```bash
-git clone https://github.com/lutzifer25/LeakWatch.git leakwatch
+git clone https://github.com/LutzHoffmann/LeakWatch.git leakwatch
 cd leakwatch
 cp backend/.env.example backend/.env   # fill in LLM_API_KEY etc.
 docker compose up --build
