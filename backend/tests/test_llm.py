@@ -27,7 +27,11 @@ async def test_openrouter_chat_returns_content() -> None:
         return body
 
     transport = httpx.MockTransport(handler)
-    client = OpenRouterClient(api_key="k", client=httpx.AsyncClient(transport=transport))
+    client = OpenRouterClient(
+        api_key="k",
+        base_url="https://openrouter.ai/api/v1",
+        client=httpx.AsyncClient(transport=transport),
+    )
     out = await client.chat("sys", "usr")
     assert out == "hello"
 

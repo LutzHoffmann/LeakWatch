@@ -20,6 +20,42 @@ async def test_extract_credentials_returns_structured_list(mock_llm: Any) -> Non
     assert kinds == {CredentialKind.EMAIL, CredentialKind.PASSWORD, CredentialKind.URL, CredentialKind.WALLET}
     emails = [c.value for c in creds if c.kind == CredentialKind.EMAIL]
     assert emails == ["alice@example.com", "bob@leak.test"]
+    # No pairs in the canned response -> all credentials are standalone.
+    assert all(c.pair_id is None for c in creds)
+
+
+@pytest.mark.asyncio
+async def test_extract_credentials_pairs_email_and_password() -> None:
+    class PairLLM:
+        async def chat_json(self, system: str, user: str, temperature: float = 0.0) -> dict[str, Any]:
+            return {
+                "pairs": [
+                    {"email": "alice@example.com", "password": "hunter2"},
+                    {"email": "bob@leak.test", "password": "correcthorse"},
+                ],
+                "emails": ["carol@example.com"],
+                "passwords": [],
+                "urls": [],
+                "wallets": [],
+            }
+
+    analyzer = LeakAnalyzer(llm=PairLLM())  # type: ignore[arg-type]
+    creds = await analyzer.extract_credentials("dump text")
+
+    emails = [c for c in creds if c.kind == CredentialKind.EMAIL]
+    passwords = [c for c in creds if c.kind == CredentialKind.PASSWORD]
+    # 2 paired emails + 1 standalone email
+    assert len(emails) == 3
+    assert len(passwords) == 2
+    # Paired email+password share a pair_id; standalone email has none.
+    paired_emails = [c for c in emails if c.pair_id is not None]
+    assert len(paired_emails) == 2
+    for pw in passwords:
+        assert pw.pair_id is not None
+        matching = [e for e in paired_emails if e.pair_id == pw.pair_id]
+        assert len(matching) == 1
+    standalone = [c for c in emails if c.pair_id is None]
+    assert [c.value for c in standalone] == ["carol@example.com"]
 
 
 @pytest.mark.asyncio

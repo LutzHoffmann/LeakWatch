@@ -38,8 +38,8 @@ class OpenRouterClient:
         client: httpx.AsyncClient | None = None,
     ) -> None:
         settings = get_settings()
-        self._api_key = api_key if api_key is not None else settings.openrouter_api_key
-        self._base_url = (base_url or settings.openrouter_base_url).rstrip("/")
+        self._api_key = api_key if api_key is not None else settings.llm_api_key
+        self._base_url = (base_url or settings.llm_base_url).rstrip("/")
         self._model = model or settings.llm_model
         self._timeout = timeout if timeout is not None else settings.llm_timeout_seconds
         self._client = client
@@ -51,7 +51,7 @@ class OpenRouterClient:
 
     def _headers(self) -> dict[str, str]:
         if not self._api_key:
-            raise LLMError("OPENROUTER_API_KEY is not configured")
+            raise LLMError("LLM_API_KEY is not configured")
         return {
             "Authorization": f"Bearer {self._api_key}",
             "Content-Type": "application/json",

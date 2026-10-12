@@ -7,8 +7,10 @@ from typing import Any
 
 import httpx
 import pytest
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from leakwatch.llm.openrouter import OpenRouterClient
+from leakwatch.models import Base
 from leakwatch.schemas import Credential, CredentialKind, RawItem
 
 
@@ -62,3 +64,23 @@ def mock_httpx_client() -> httpx.AsyncClient:
 @pytest.fixture
 async def async_noop() -> AsyncIterator[None]:
     yield None
+
+
+@pytest.fixture
+async def sqlite_engine() -> AsyncIterator[Any]:
+    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    yield engine
+    await engine.dispose()
+
+
+@pytest.fixture
+async def sqlite_session_factory(sqlite_engine: Any) -> async_sessionmaker[Any]:
+    return async_sessionmaker(bind=sqlite_engine, expire_on_commit=False)
+
+
+@pytest.fixture
+async def sqlite_session(sqlite_session_factory: async_sessionmaker[Any]) -> AsyncIterator[Any]:
+    async with sqlite_session_factory() as session:
+        yield session

@@ -62,6 +62,10 @@ class Credential(Base):
     kind: Mapped[str] = mapped_column(String(32), index=True)  # email|password|url|wallet
     value: Mapped[str] = mapped_column(Text, index=True)
     context: Mapped[str] = mapped_column(Text, default="")
+    # Shared id for credentials forming an explicit email+password pair (None
+    # for standalone credentials). Two credentials with the same pair_id and
+    # raw_item_id form one combination.
+    pair_id: Mapped[str | None] = mapped_column(String(36), index=True, default=None)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 

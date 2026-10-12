@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import uuid
+
 import structlog
 
 from .llm.openrouter import LLMError, OpenRouterClient
@@ -13,14 +15,20 @@ SYSTEM_PROMPT = """\
 You are a security analyst. Extract credentials from the given text.
 
 Return JSON with these keys (omit a key if nothing is found):
-- "emails": list of email addresses (with domain)
-- "passwords": list of passwords, only if clearly recognizable as such
+- "pairs": list of objects {"email": "<email>", "password": "<password>"} for
+  every place where an email address appears together with an associated
+  password in the text. This is the most important field.
+- "emails": list of remaining email addresses (with domain) not already listed
+  in "pairs"
+- "passwords": list of remaining passwords not already listed in "pairs"
 - "urls": list of URLs pointing to leak dumps or relevant resources
 - "wallets": list of cryptocurrency wallet addresses
 
 Rules:
 - Output ONLY the JSON object, no explanation.
 - Deduplicate entries.
+- Only pair an email with a password if the text clearly associates them
+  (e.g. "user: alice@example.com : hunter2" or "alice@example.com=hunter2").
 - Do not invent data that is not present in the text.
 """
 
@@ -48,6 +56,16 @@ class LeakAnalyzer:
             return []
 
         credentials: list[Credential] = []
+        # Explicit email+password pairs: emit two credentials sharing a pair_id.
+        for pair in result.pairs:
+            pair_id = uuid.uuid4().hex
+            credentials.append(
+                Credential(kind=CredentialKind.EMAIL, value=pair.email, pair_id=pair_id)
+            )
+            credentials.append(
+                Credential(kind=CredentialKind.PASSWORD, value=pair.password, pair_id=pair_id)
+            )
+        # Standalone credentials not part of any pair.
         for email in result.emails:
             credentials.append(Credential(kind=CredentialKind.EMAIL, value=email))
         for pw in result.passwords:

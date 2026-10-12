@@ -1,4 +1,5 @@
 import { ShieldAlert } from "lucide-react";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -10,6 +11,18 @@ export default function Home() {
       <p className="text-lg text-muted-foreground">
         Credential Leak Monitor — Dashboard coming soon.
       </p>
+      <Link
+        href="/check"
+        className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+      >
+        Search a selector across leaks & pastes →
+      </Link>
+      <Link
+        href="/matches"
+        className="rounded-md border border-border px-4 py-2 text-sm font-medium hover:bg-muted"
+      >
+        View found leaks (matches) →
+      </Link>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-2xl">
         {[
           { label: "Overview", value: "Last 10 alerts" },

@@ -8,7 +8,7 @@ import httpx
 import pytest
 
 from leakwatch.schemas import RawItem
-from leakwatch.watchers import GitHubGistWatcher, PastebinWatcher
+from leakwatch.watchers import GitHubGistWatcher
 from leakwatch.watchers.base import BaseWatcher
 
 
@@ -43,12 +43,6 @@ async def test_recording_watcher_polls() -> None:
     assert len(items) == 1
     assert items[0].source == "recording"
     assert watcher.calls == 1
-
-
-@pytest.mark.asyncio
-async def test_pastebin_watcher_stub_returns_empty() -> None:
-    items = await PastebinWatcher().poll()
-    assert items == []
 
 
 def _gist_list_response() -> list[dict[str, Any]]:

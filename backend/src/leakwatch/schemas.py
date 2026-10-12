@@ -35,11 +35,23 @@ class Credential(BaseModel):
     kind: CredentialKind
     value: str
     context: str = ""
+    # When the analyzer extracts an explicit email+password pair, both the
+    # EMAIL and the PASSWORD credential share the same ``pair_id`` so the UI
+    # can reconstruct the combination. None for standalone credentials.
+    pair_id: str | None = None
+
+
+class EmailPasswordPair(BaseModel):
+    """An explicit email + password combination found in raw leak text."""
+
+    email: str
+    password: str  # noqa: S105
 
 
 class LLMExtractionResult(BaseModel):
     """Structured JSON contract returned by the LLM extraction prompt."""
 
+    pairs: list[EmailPasswordPair] = Field(default_factory=list)
     emails: list[str] = Field(default_factory=list)
     passwords: list[str] = Field(default_factory=list)
     urls: list[str] = Field(default_factory=list)
