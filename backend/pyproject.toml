@@ -2,7 +2,7 @@
 name = "leakwatch"
 version = "0.1.0"
 description = "LeakWatch — Credential Leak Monitor. Watches paste sites, Telegram channels and public leak dumps for your domains and emails."
-readme = "../README.md"
+readme = "README.md"
 requires-python = ">=3.12"
 license = { text = "MIT" }
 authors = [{ name = "LeakWatch" }]
